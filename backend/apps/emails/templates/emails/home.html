@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="card" id="processCard">
+  <h1>Processamento de Email</h1>
+  <div class="logout">
+    <p>Bem-vindo(a), {{ request.user.username }}! <a href="{% url 'logout' %}">Sair</a></p>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" id="emailForm">
+    {% csrf_token %}
+    {% for field in fields %}
+      {% if field.type == "FileField" %}
+        <!-- Área de upload com preview -->
+        <div id="dropZone" class="drop-zone">
+          <p id="dropText">Arraste e solte seu arquivo (.txt ou .pdf) ou clique para selecionar</p>
+          <input type="file" name="{{ field.name }}" id="fileInput" />
+        </div>
+      {% elif field.type == "CharField" %}
+        {% if field.name == "body" %}
+          <textarea name="{{ field.name }}" placeholder="{{ field.name|capfirst }}" style="min-height:120px; max-height:300px;"></textarea>
+        {% else %}
+          <textarea name="{{ field.name }}" placeholder="{{ field.name|capfirst }}" style="min-height:40px; max-height:120px;"></textarea>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    <button type="submit" id="submitBtn" disabled>Processar Email</button>
+  </form>
+
+  {% if result %}
+    <div class="result 
+        {% if result.category == 'PRODUTIVO' %}produtivo
+        {% elif result.category == 'IMPRODUTIVO' %}improdutivo
+        {% else %}error{% endif %}" id="resultBox">
+
+      <div class="copy-overlay" id="copyOverlay">Copiar</div>
+
+      <p><strong>Categoria:</strong> {{ result.category }}</p>
+      <p><strong>Resposta sugerida:</strong></p>
+      {% if result.category == "ERRO" %}
+        <div id="ai-response">
+          Falha no processamento do email. Tente novamente mais tarde.
+        </div>
+      {% else %}
+        <pre id="ai-response" style="white-space: pre-wrap; word-wrap: break-word;">{{ result.response }}</pre>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<style>
+/* ---------------- BOTÃO ---------------- */
+#submitBtn {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+#submitBtn:disabled {
+  background: #64748b; 
+  color: #cbd5e1;
+  cursor: default; 
+  opacity: 0.6;
+}
+
+#submitBtn.loading::after {
+  content: "";
+  display: inline-block;
+  margin-left: 10px;
+  border: 2px solid #f1f5f9;
+  border-top: 2px solid #64748b;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ---------------- TEXTAREAS ---------------- */
+textarea {
+  width: 100%;
+  resize: vertical;
+  background: #1e293b;
+  color: #f1f5f9;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 1rem;
+  transition: border 0.2s ease;
+}
+
+textarea:focus {
+  border: 2px solid #38bdf8;
+  outline: none;
+}
+
+/* ---------------- DROPZONE ---------------- */
+.drop-zone {
+  border: 2px dashed #94a3b8;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  color: #cbd5e1;
+  background: #1e293b;
+  margin-bottom: 15px;
+  position: relative;
+  cursor: pointer;
+  transition: border 0.2s ease, background 0.2s ease;
+}
+
+.drop-zone.dragover {
+  border-color: #38bdf8;
+  background: #0f172a;
+  color: #38bdf8;
+}
+
+.drop-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+#dropZone p {
+  margin: 0;
+  pointer-events: none;
+  word-break: break-all;
+}
+
+/* ---------------- RESULTADOS ---------------- */
+.result {
+  position: relative;
+  border-radius: 12px;
+  padding: 15px;
+  margin-top: 20px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.result:hover {
+  cursor: pointer;
+}
+
+.copy-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  opacity: 0;
+  font-size: 16px;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.result:hover .copy-overlay {
+  opacity: 1;
+}
+
+.produtivo {
+  background: #22c55e33;
+  border-left: 5px solid #22c55e;
+}
+
+.improdutivo {
+  background: #f0c25846;
+  border-left: 5px solid #e9b441;
+}
+
+.error {
+  background: #f8717133;
+  border-left: 5px solid #ee3838;
+}
+</style>
+
+<script>
+const form = document.getElementById("emailForm");
+const submitBtn = document.getElementById("submitBtn");
+const inputs = Array.from(form.querySelectorAll("textarea, input[type='file']"));
+
+// ---------------- BOTÃO HABILITAR/DESABILITAR ----------------
+function checkForm() {
+  let hasContent = inputs.some(input => {
+    if (input.type === "file") {
+      return input.files.length > 0;
+    } else {
+      return input.value.trim().length > 0;
+    }
+  });
+  submitBtn.disabled = !hasContent;
+}
+
+inputs.forEach(input => {
+  input.addEventListener("input", checkForm);
+  input.addEventListener("change", checkForm);
+});
+checkForm();
+
+// ---------------- DRAG & DROP ----------------
+const dropZone = document.getElementById("dropZone");
+const fileInput = document.getElementById("fileInput");
+const dropText = document.getElementById("dropText");
+
+function updateFileName(file) {
+  dropText.textContent = file.name;
+}
+
+dropZone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  dropZone.classList.add("dragover");
+});
+
+dropZone.addEventListener("dragleave", () => {
+  dropZone.classList.remove("dragover");
+});
+
+dropZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+
+  // validação
+  const allowedTypes = ["text/plain", "application/pdf"];
+  if (!allowedTypes.includes(file.type)) {
+    alert("Somente arquivos .txt ou .pdf são permitidos!");
+    fileInput.value = "";
+    dropText.textContent = "Arraste e solte seu arquivo (.txt ou .pdf) ou clique para selecionar";
+    checkForm();
+    return;
+  }
+
+  fileInput.files = e.dataTransfer.files;
+  updateFileName(file);
+  checkForm();
+});
+
+// Atualiza a preview
+const MAX_SIZE_MB = 1;
+
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
+
+  if (file) {
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      alert("Arquivo muito grande! Máximo permitido: 2MB.");
+      fileInput.value = "";
+      dropText.textContent = "Arraste e solte seu arquivo (.txt ou .pdf) ou clique para selecionar";
+      checkForm();
+      return;
+    }
+
+    updateFileName(file);
+  } else {
+    dropText.textContent = "Arraste e solte seu arquivo (.txt ou .pdf) ou clique para selecionar";
+  }
+});
+
+// ---------------- DESATIVAR BOTÃO DURANTE O PROCESSAMENTO ----------------
+form.addEventListener("submit", (e) => {
+  submitBtn.disabled = true;
+  submitBtn.classList.add("loading");
+  submitBtn.textContent = "Processando e-mail...";
+  inputs.forEach(input => {
+    if (input.tagName === "TEXTAREA") input.readOnly = true;
+  });
+  dropZone.style.pointerEvents = "none";
+});
+
+// ---------------- COPIAR RESPOSTA ---------------- 
+const resultBox = document.getElementById("resultBox");
+const overlay = document.getElementById("copyOverlay");
+
+if (resultBox) {
+  resultBox.addEventListener("click", () => {
+    const text = document.getElementById("ai-response").innerText;
+
+    navigator.clipboard.writeText(text).then(() => {
+      overlay.textContent = "Copiado!";
+
+      setTimeout(() => {
+        overlay.textContent = "Copiar";
+      }, 1500);
+    });
+  });
+}
+</script>
+{% endblock %}
+
