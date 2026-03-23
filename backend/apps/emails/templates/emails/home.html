@@ -18,11 +18,15 @@
           <input type="file" name="{{ field.name }}" id="fileInput" />
         </div>
       {% elif field.type == "CharField" %}
-        {% if field.name == "body" %}
-          <textarea name="{{ field.name }}" placeholder="{{ field.name|capfirst }}" style="min-height:120px; max-height:300px;"></textarea>
-        {% else %}
-          <textarea name="{{ field.name }}" placeholder="{{ field.name|capfirst }}" style="min-height:40px; max-height:120px;"></textarea>
-        {% endif %}
+        <div class="textarea-wrapper">
+          {% if field.name == "body" %}
+            <textarea name="{{ field.name }}" id="bodyText" placeholder="Corpo do Email" style="min-height:120px;"></textarea>
+            <div class="word-counter" id="bodyCounter">0 / 10000</div>
+          {% else %}
+            <textarea name="{{ field.name }}" id="subjectText" placeholder="Assunto" style="min-height:40px;"></textarea>
+            <div class="word-counter" id="subjectCounter">0 / 250</div>
+          {% endif %}
+        </div>
       {% endif %}
     {% endfor %}
     <button type="submit" id="submitBtn" disabled>Processar Email</button>
@@ -50,6 +54,28 @@
 </div>
 
 <style>
+/* ---------------- Contador ---------------- */
+.textarea-wrapper {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+textarea {
+  padding-bottom: 30px !important;
+}
+
+.word-counter {
+  position: absolute;
+  bottom: 18px;
+  right: 20px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  background: rgba(30, 41, 59, 0.8);
+  padding: 2px 5px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
 /* ---------------- BOTÃO ---------------- */
 #submitBtn {
   position: relative;
@@ -186,6 +212,39 @@ textarea:focus {
 const form = document.getElementById("emailForm");
 const submitBtn = document.getElementById("submitBtn");
 const inputs = Array.from(form.querySelectorAll("textarea, input[type='file']"));
+// Selecionando os elementos
+const bodyText = document.getElementById("bodyText");
+const bodyCounter = document.getElementById("bodyCounter");
+const subjectText = document.getElementById("subjectText");
+const subjectCounter = document.getElementById("subjectCounter");
+
+// Função genérica para atualizar o contador
+function updateCounter(input, display, limit) {
+    if (!input || !display) return;
+    const length = input.value.length;
+    display.textContent = `${length} / ${limit}`;
+    
+    // Feedback visual se chegar perto do limite
+    if (length >= limit) {
+        display.style.color = "#f87171"; // Vermelho
+    } else {
+        display.style.color = "#94a3b8"; // Cor padrão
+    }
+}
+
+// Eventos para o Corpo (Body)
+if (bodyText) {
+    bodyText.addEventListener("input", () => {
+        updateCounter(bodyText, bodyCounter, 10000);
+    });
+}
+
+// Eventos para o Assunto (Subject)
+if (subjectText) {
+    subjectText.addEventListener("input", () => {
+        updateCounter(subjectText, subjectCounter, 250);
+    });
+}
 
 // ---------------- BOTÃO HABILITAR/DESABILITAR ----------------
 function checkForm() {
@@ -246,7 +305,20 @@ dropZone.addEventListener("drop", (e) => {
 });
 
 // Atualiza a preview
-const MAX_SIZE_MB = 1;
+const MAX_SIZE_MB = 2;
+const MAX_WORDS = 10000;
+
+function countWords(text) {
+  return text.trim().split(/\s+/).length;
+}
+
+textarea.addEventListener("input", () => {
+  const wordCount = countWords(textarea.value);
+  if (wordCount > MAX_WORDS) {
+    alert(`Texto muito grande! Limite de ${MAX_WORDS} palavras.`);
+    textarea.value = textarea.value.split(/\s+/).slice(0, MAX_WORDS).join(" ");
+  }
+});
 
 fileInput.addEventListener("change", () => {
   const file = fileInput.files[0];
