@@ -69,7 +69,7 @@ C:.
 ### 1️⃣ Clone o repositório
 
 ```bash
-git clone <REPOSITORIO_GITHUB>
+git clone https://github.com/MarianaMendanha/Email-AI-Classifier
 cd email-ai-classifier/backend
 ```
 
