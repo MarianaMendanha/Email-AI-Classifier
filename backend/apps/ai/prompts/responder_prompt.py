@@ -21,5 +21,7 @@ STYLE GUIDELINES:
 - Do not include explanations about what you are doing.
 
 OUTPUT:
-- Return ONLY the email subject and response text.
+- You MUST return a valid JSON object.
+- Format: {"subject": "Re: ...", "body": "..."}
+- Do not include any text outside the JSON.
 """
