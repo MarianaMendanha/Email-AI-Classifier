@@ -73,7 +73,7 @@ async def run_email_pipeline(full_text: str) -> EmailPipelineResult:
 
     except Exception as e:
         print("[ERROR] Pipeline failed:", str(e))
-        return {
-            "category": "ERROR",
-            "response": f"Erro ao processar email: {str(e)}",
-        }
+        return EmailPipelineResult(
+            category="ERROR",
+            response=f"Erro ao processar email: {str(e)}"
+        )

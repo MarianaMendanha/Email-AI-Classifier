@@ -15,6 +15,9 @@ def process_email(full_text: str) -> dict:
             asyncio.set_event_loop(loop)
 
         result = loop.run_until_complete(run_email_pipeline(full_text))
+
+        if isinstance(result, dict):
+            return result
         return result.model_dump()
 
     except Exception as e:
