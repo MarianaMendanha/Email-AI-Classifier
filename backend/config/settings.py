@@ -23,12 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-i19s4o&$rd!)!wfm@=usy&xcv6bjrald5ab2b65wzf1yxwk1+2'
+SECRET_KEY = os.getenv('SECRET_KEY', 'chave-temporaria-apenas-para-dev-local')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ['https://*.railway.app', 'https://*.up.railway.app']
 
 
 # Application definition
@@ -91,9 +92,25 @@ WSGI_APPLICATION = 'config.wsgi.application'
 #     }
 # }
 
+DATABASE_URL = os.getenv('DATABASE_URL')
+
 DATABASES = {
-    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
+    'default': dj_database_url.config(
+        default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
+
+# Se estiver no Railway (onde DATABASE_URL existe), força o SSL
+if DATABASE_URL:
+    DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
+
+# Configuração CRÍTICA para o Railway
+if not DEBUG:
+    DATABASES['default']['OPTIONS'] = {
+        'sslmode': 'require',
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
