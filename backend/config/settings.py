@@ -103,11 +103,7 @@ DATABASES = {
 }
 
 # Se estiver no Railway (onde DATABASE_URL existe), força o SSL
-if DATABASE_URL:
-    DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
-
-# Configuração CRÍTICA para o Railway
-if not DEBUG:
+if not DEBUG and DATABASES['default']['ENGINE'] != 'django.db.backends.sqlite3':
     DATABASES['default']['OPTIONS'] = {
         'sslmode': 'require',
     }
