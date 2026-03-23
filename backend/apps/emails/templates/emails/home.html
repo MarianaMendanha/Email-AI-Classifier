@@ -213,6 +213,11 @@ const form = document.getElementById("emailForm");
 const submitBtn = document.getElementById("submitBtn");
 const inputs = Array.from(form.querySelectorAll("textarea, input[type='file']"));
 // Selecionando os elementos
+const LIMITS = {
+    subject: 250,
+    body: 10000
+};
+
 const bodyText = document.getElementById("bodyText");
 const bodyCounter = document.getElementById("bodyCounter");
 const subjectText = document.getElementById("subjectText");
@@ -248,14 +253,34 @@ if (subjectText) {
 
 // ---------------- BOTÃO HABILITAR/DESABILITAR ----------------
 function checkForm() {
-  let hasContent = inputs.some(input => {
-    if (input.type === "file") {
-      return input.files.length > 0;
-    } else {
-      return input.value.trim().length > 0;
+    const subjectValue = document.getElementById("subjectText")?.value || "";
+    const bodyValue = document.getElementById("bodyText")?.value || "";
+    const fileInput = document.getElementById("fileInput");
+
+    // 1. Verifica se tem ALGUM conteúdo (Texto ou Arquivo)
+    const hasContent = subjectValue.trim().length > 0 || 
+                      bodyValue.trim().length > 0 || 
+                      (fileInput && fileInput.files.length > 0);
+
+    // 2. Verifica se os limites de caracteres foram respeitados
+    const isWithinLimits = subjectValue.length <= LIMITS.subject && 
+                          bodyValue.length <= LIMITS.body;
+
+    // O botão só habilita se: (Tem conteúdo) E (Está dentro dos limites)
+    submitBtn.disabled = !(hasContent && isWithinLimits);
+
+    // Feedback visual opcional: mudar a cor dos contadores
+    updateCounterColor(subjectValue.length, "subjectCounter", LIMITS.subject);
+    updateCounterColor(bodyValue.length, "bodyCounter", LIMITS.body);
+}
+
+// Função auxiliar para mudar a cor do contador se passar do limite
+function updateCounterColor(length, counterId, limit) {
+    const counterElement = document.getElementById(counterId);
+    if (counterElement) {
+        counterElement.style.color = length > limit ? "#f87171" : "#94a3b8";
+        counterElement.textContent = `${length} / ${limit}`;
     }
-  });
-  submitBtn.disabled = !hasContent;
 }
 
 inputs.forEach(input => {
