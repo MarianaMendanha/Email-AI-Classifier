@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from apps.emails.serializers import EmailRequestSerializer
 from services.ai_orchestrator import process_email
 from services.file_utils import extract_text_from_file
+from .models import EmailHistory
 
 
 @login_required(login_url='/login/')
@@ -43,6 +44,18 @@ def home(request):
             # Chama o orquestrador
             result = process_email(full_text)
 
+            if result.get("category") != "ERROR":
+                # SALVAR NO HISTÓRICO
+                EmailHistory.objects.create(
+                    user=request.user,
+                    subject=subject,
+                    body=body,
+                    file_name=file.name if file else None,
+                    file_content=file_text if file else None,
+                    category=result["category"],
+                    ai_response=result["response"]
+                )
+
         else:
             result = {
                 "category": "ERRO",
@@ -60,4 +73,6 @@ def home(request):
             "required": field.required
         })
 
-    return render(request, "emails/home.html", {"fields": fields, "result": result})
+    history = EmailHistory.objects.filter(user=request.user)[:10]
+
+    return render(request, "emails/home.html", {"fields": fields, "result": result, "history": history})

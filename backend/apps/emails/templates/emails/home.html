@@ -2,6 +2,49 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
+<aside class="sidebar">
+  <h2 style="font-size: 1.2rem; text-align: left; border-bottom: 1px solid #334155; padding-bottom: 10px;">Histórico</h2>
+  <div class="history-list">
+    {% for item in history %}
+      <div class="history-item" style="cursor: default;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span class="badge {{ item.category|lower }}" style="font-size: 0.65rem; padding: 2px 6px;">{{ item.category }}</span>
+          <small style="color: #94a3b8;">{{ item.created_at|date:"H:i D, d/m/Y" }}</small>
+        </div>
+        
+        <strong style="display: block; color: #38bdf8; margin-bottom: 8px; font-size: 0.9rem;">
+          {{ item.subject|default:"Sem Assunto"|truncatechars:35 }}
+        </strong>
+
+        <details style="border-top: 1px solid #334155; padding-top: 8px;">
+          <summary style="font-size: 0.75rem; color: #94a3b8; cursor: pointer; list-style: none; outline: none;">
+            ver detalhes <span style="font-size: 0.6rem;">▼</span>
+          </summary>
+          
+          <div style="margin-top: 10px; font-size: 0.8rem; color: #cbd5e1;">
+            {% if item.body %}
+              <p style="margin-bottom: 8px;"><strong style="color: #94a3b8;">Corpo:</strong><br>
+              <span style="font-style: italic; color: #f1f5f9;">{{ item.body|truncatechars:100 }}</span></p>
+            {% endif %}
+
+            {% if item.file_name %}
+              <div style="background: #0f172a; padding: 8px; border-radius: 6px; border: 1px solid #1e293b;">
+                <p style="color: #38bdf8; font-size: 0.7rem; margin-bottom: 4px;">📁 {{ item.file_name }}</p>
+                <pre style="font-size: 0.7rem; white-space: pre-wrap; color: #94a3b8; max-height: 80px; overflow-y: auto;">{{ item.file_content|truncatechars:200 }}</pre>
+              </div>
+            {% endif %}
+            
+            <p style="margin-top: 8px;"><strong style="color: #38bdf8;">Resposta IA:</strong><br>
+            <span style="font-size: 0.75rem;">{{ item.ai_response|truncatechars:150 }}</span></p>
+          </div>
+        </details>
+      </div>
+    {% empty %}
+      <p style="font-size: 0.9rem; color: #94a3b8; text-align: center; margin-top: 20px;">Vazio</p>
+    {% endfor %}
+  </div>
+</aside>
+
 <div class="card" id="processCard">
   <h1>Processamento de Email</h1>
   <div class="logout">

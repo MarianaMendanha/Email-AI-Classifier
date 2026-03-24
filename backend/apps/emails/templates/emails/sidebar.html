@@ -1,0 +1,24 @@
+<div class="sidebar">
+    <h3>Histórico Recente</h3>
+    <div class="history-list">
+        {% for item in history %}
+            <div class="history-card" onclick="loadHistoryItem('{{ item.id }}')">
+                <span class="badge {{ item.category|lower }}">{{ item.category }}</span>
+                <p class="history-date">{{ item.created_at|date:"d/m H:i" }}</p>
+                <strong>{{ item.subject|default:"Sem Assunto"|truncatechars:30 }}</strong>
+                
+                {% if item.file_name %}
+                    <div class="file-info">
+                        <small>📁 {{ item.file_name }}</small>
+                        <details>
+                            <summary>Ver conteúdo extraído</summary>
+                            <pre class="mini-content">{{ item.file_content|truncatechars:200 }}</pre>
+                        </details>
+                    </div>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p class="empty-msg">Nenhum processamento ainda.</p>
+        {% endfor %}
+    </div>
+</div>
