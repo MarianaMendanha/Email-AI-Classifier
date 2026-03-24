@@ -1,130 +1,108 @@
-# 📧 Email Classifier
+# 📧 Email AI Classifier & Responder
 
-**Descrição:**
-Solução web para **classificação automática de emails** e sugestão de respostas, liberando tempo da equipe de atendimento. A aplicação distingue emails **Produtivos** de **Improdutivos** e gera respostas automáticas usando IA.
+**Solução inteligente para gestão de fluxos de comunicação financeira.**
 
----
-
-## 🔹 Funcionalidades
-
-- Upload de emails em **.txt** ou **.pdf** e/ou inserção direta de texto.
-- Classificação automática do email em **Produtivo** ou **Improdutivo**.
-- Geração de resposta sugerida baseada no conteúdo do email.
-- UI moderna e interativa com:
-  - Área de arrastar e soltar arquivos.
-  - Hover em resultado para copiar a resposta com feedback visual.
-
-- Limite de upload de arquivos configurável (1MB).
-- Backend em **Django + Python**, com integração a IA para NLP.
+Este projeto automatiza a triagem de altos volumes de emails, utilizando Inteligência Artificial para classificar mensagens entre **Produtivas** (que exigem ação) e **Improdutivas** (informativas ou irrelevantes), sugerindo automaticamente uma resposta contextualizada.
 
 ---
 
-## 🛠 Tecnologias
+## 🚀 Links do Projeto
 
-- **Backend:** Django, Python
-- **Frontend:** HTML, CSS, JS
-- **IA/NLP:** Ollama - llama3.1
-- **Deploy:** Heroku
+- **Aplicação em Produção:** [Railway App Link](https://email-ai-classifier-production-e8a2.up.railway.app/)
+- **Vídeo Demonstrativo:** [Link do YouTube Aqui]
 
 ---
 
-## ⚡ Estrutura do Projeto
+## 🔹 Funcionalidades Principais
 
-```
-C:.
-│   .prettierrc
-│   db.sqlite3
-│   manage.py
-│   requirements.txt
-│
-├───apps
-│   ├───ai
-│   │   │   admin.py
-│   │   │   apps.py
-│   │   │   llm.py             # Cliente Ollama + integração Llama3.1
-│   │   │   models.py
-│   │   │   tests.py
-│   │   │   views.py
-│   │   │   __init__.py
-│   │   │
-│   │   ├───agents           # Agentes separados para classificação e resposta
-│   │   ├───orchestrator     # Pipelines de processamento de emails
-│   │   ├───prompts          # Prompts de classificação e resposta
-│   │   └───schemas          # Schemas de entrada/saída do processamento
-│   │
-│   ├───core
-│   ├───emails               # Upload, views, templates e serializers
-│   └───users                # Sistema de login e autenticação
-│
-├───config                   # Configuração do Django (settings, urls, wsgi)
-├───domain
-├───services                 # Orquestrador e utils
-└───templates                # Base HTML
+- **Processamento Multimodal:** Aceita entrada de texto direta e/ou upload de arquivos (**PDF/TXT**).
+- **Classificação Inteligente:** Separa emails críticos de mensagens de "Feliz Natal" ou agradecimentos.
+- **Geração de Resposta:** Cria rascunhos profissionais automáticos no mesmo idioma do email original.
+- **Interface de Alta Usabilidade (UX):**
+  - Sistema de Autenticação (Login/Logout).
+  - Drag & Drop para arquivos com validação de formato e tamanho (2MB).
+  - Feedback visual de processamento (Loading states).
+  - Recurso de "Clique para Copiar" a resposta sugerida.
+
+---
+
+## 🛠 Arquitetura e Decisões Técnicas
+
+A aplicação foi construída seguindo princípios de **Clean Architecture** e **Modularidade**:
+
+- **Backend:** Django, estruturado em Apps para separação de responsabilidades.
+- **Orquestração de IA:** Utilização da biblioteca **LlamaIndex** para gerenciar o fluxo de dados entre o usuário e os modelos de linguagem.
+- **Agentes Especializados:** O sistema utiliza dois agentes distintos (Classifier e Responder), cada um com prompts de sistema otimizados para evitar alucinações.
+- **Structured Outputs:** Implementação de saídas estruturadas via **Pydantic/JSON Mode**, garantindo que a comunicação entre a IA e o Backend seja sempre estável e tipada.
+- **LLMs:** \* **Produção:** Llama-3.3-70B (via Groq Cloud) para altíssima performance e baixa latência.
+  - **Desenvolvimento:** Llama-3.1-8B (via Ollama) para testes locais e privacidade.
+
+---
+
+## ⚡ Estrutura do Repositório
+
+```text
+├── backend
+│   ├── apps
+│   │   ├── ai            # Core da IA: Agentes, Prompts, Schemas e Orquestrador
+│   │   ├── emails        # Lógica de negócio, Views e Processamento de arquivos
+│   │   └── users         # Autenticação e Gestão de usuários
+│   ├── services          # Utilitários de arquivo e orquestração de sistema
+│   ├── templates         # Interface Web (Django Templates + Vanilla JS)
+│   └── manage.py
+├── .github/workflows
+└── requirements.txt      # Dependências (Django, LlamaIndex, Groq, PyPDF2)
 ```
 
 ---
 
-## 🚀 Instalação Local
+## 💻 Instalação Local
 
-### 1️⃣ Clone o repositório
+### 1️⃣ Requisitos
+
+- Python 3.10+
+- Ollama (opcional para rodar localmente)
+
+### 2️⃣ Configuração
 
 ```bash
-git clone https://github.com/MarianaMendanha/Email-AI-Classifier
+# Clone o repositório
+git clone https://github.com/SeuUsuario/Email-AI-Classifier
 cd email-ai-classifier/backend
-```
 
-### 2️⃣ Crie e ative o ambiente virtual
-
-```bash
+# Virtualenv
 python -m venv venv
-# Windows
-venv\Scripts\activate
-# macOS/Linux
-source venv/bin/activate
-```
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
 
-### 3️ Instale dependências
-
-```bash
+# Dependências
 pip install -r requirements.txt
 ```
 
-### 4️⃣ Rode migrações do Django
+### 3️⃣ Variáveis de Ambiente
+
+Crie um arquivo `.env` na pasta `backend/` e adicione sua chave (se for usar Groq):
+
+```env
+GROQ_API_KEY=sua_chave_aqui
+SECRET_KEY=sua_chave_django
+DEBUG=True
+```
+
+### 4️⃣ Execução
 
 ```bash
 python manage.py migrate
-```
-
-### 5️⃣ Execute o servidor
-
-```bash
 python manage.py runserver
 ```
 
-Acesse a aplicação em: [http://127.0.0.1:8000](http://127.0.0.1:8000)
-
 ---
 
-## 💡 Uso
+## 📈 Evoluções Futuras (Roadmap)
 
-1. Preencha o formulário:
-   - Digite o **subject** e/ou **body** do email e/ou envie um arquivo `.txt` ou `.pdf`.
+Se este projeto fosse escalado para um ambiente corporativo de grande porte, as próximas etapas seriam:
 
-2. Clique em **Processar Email**.
-3. O resultado aparecerá na caixa de resultado:
-   - **Categoria**: Produtivo / Improdutivo
-   - **Resposta sugerida**: texto gerado pela IA
-
-4. Passe o mouse sobre a caixa de resultado para aparecer o ícone de **[copiar]** e clique para copiar a resposta.
-
----
-
-## 🌐 Deploy
-
-- **Heroku:** [https://www.heroku.com/](https://www.heroku.com/)
-
-> link <>
-
----
-
-## 📝 Licença
+1.  **Processamento Assíncrono:** Uso de Celery/Redis para processar arquivos muito pesados sem travar a interface.
+2.  **Fine-Tuning:** Treinar o modelo com o histórico real de emails da empresa para captar gírias e termos técnicos específicos do setor financeiro.
+3.  **Integração via API:** Conectar diretamente com Microsoft Graph (Outlook) ou Gmail API para leitura automática da caixa de entrada.
+4.  **Hospedagem Enterprise:** Migração para AWS (ECS/Fargate) com auto-scaling.
