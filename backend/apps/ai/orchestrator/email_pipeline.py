@@ -10,6 +10,22 @@ from apps.ai.prompts import (
 
 import json
 
+MAX_CHARS = 8000
+
+
+def smart_truncate(text: str, max_length: int = MAX_CHARS) -> str:
+    if len(text) <= max_length:
+        return text
+
+    print(
+        f"[WARNING] Texto excede {max_length} caracteres. Aplicando corte...")
+
+    head = max_length // 2
+    tail = max_length // 2
+
+    truncated_text = f"{text[:head]}\n\n[... PARTE DO TEXTO REMOVIDA POR TAMANHO ...]\n\n{text[-tail:]}"
+    return truncated_text
+
 
 classifier_agent = ClassifierAgent(system_prompt=CLASSIFIER_PROMPT)
 response_agent = ResponseAgent(system_prompt=RESPONSE_PROMPT)
@@ -17,6 +33,8 @@ response_agent = ResponseAgent(system_prompt=RESPONSE_PROMPT)
 
 async def run_email_pipeline(full_text: str) -> EmailPipelineResult:
     print("\n================ EMAIL PIPELINE START ================")
+
+    full_text = smart_truncate(full_text)
     print(f"[INPUT]\n{full_text}\n")
 
     try:

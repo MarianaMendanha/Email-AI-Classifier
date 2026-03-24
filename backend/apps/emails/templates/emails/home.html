@@ -19,10 +19,10 @@
       {% elif field.type == "CharField" %}
         <div class="textarea-wrapper">
           {% if field.name == "body" %}
-            <textarea name="{{ field.name }}" id="bodyText" placeholder="Corpo do Email" style="min-height:120px;" maxlength="10500"></textarea>
+            <textarea name="{{ field.name }}" id="bodyText" placeholder="Corpo do Email" style="min-height:140px;max-height:300px;" maxlength="10500"></textarea>
             <div class="word-counter" id="bodyCounter">0 / 10000</div>
           {% else %}
-            <textarea name="{{ field.name }}" id="subjectText" placeholder="Assunto" style="min-height:40px;" maxlength="300"></textarea>
+            <textarea name="{{ field.name }}" id="subjectText" placeholder="Assunto" style="min-height:65px;max-height:120px;" maxlength="300"></textarea>
             <div class="word-counter" id="subjectCounter">0 / 250</div>
           {% endif %}
         </div>
